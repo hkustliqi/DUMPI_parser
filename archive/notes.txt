@@ -1,0 +1,4 @@
+netstress, confidence, and mpp-suite are for communication workloads.
+shmem-fft and harm are for communication and computation workloads.
+
+Hieu Pham (Jan 11, 2016 in email)
