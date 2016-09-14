@@ -1,0 +1,206 @@
+Blocking Message Passing Routines:
+
+MPI_Send (&buf,count,datatype,dest,tag,comm) 
+MPI_Recv (&buf,count,datatype,source,tag,comm,&status) 
+------>
+Source:		source
+Dst:            dest
+Size:           count*sizeof(datatype)
+Source:         dest
+Dst:            source
+Size:           1
+
+
+MPI_Ssend (&buf,count,datatype,dest,tag,comm) 
+MPI_Recv (&buf,count,datatype,source,tag,comm,&status) 
+------>
+Source:		source
+Dst:            dest
+Size:           count*sizeof(datatype)
+Source:         dest
+Dst:            source
+Size:           1
+
+
+MPI_Sendrecv (&sendbuf,sendcount,sendtype,dest,sendtag, 
+              &recvbuf,recvcount,recvtype,source,recvtag, 
+	      comm,&status)
+------>
+Source:		MPI_Comm_rank
+Dst:            dest
+Size:           sendcount*sizeof(datatype)
+Source:		source
+Dst:            MPI_Comm_rank
+Size:           recvcount*sizeof(datatype)
+
+
+
+Non-blocking Message Passing Routines
+
+MPI_Isend (&buf,count,datatype,dest,tag,comm,&request) 
+MPI_Irecv (&buf,count,datatype,source,tag,comm,&request) 
+------>
+Source:		source
+Dst:            dest
+Size:           count*sizeof(datatype)
+Source:         dest
+Dst:            source
+Size:           1
+
+MPI_Issend (&buf,count,datatype,dest,tag,comm,&request) 
+MPI_Irecv (&buf,count,datatype,source,tag,comm,&request) 
+------>
+Source:		source
+Dst:            dest
+Size:           count*sizeof(datatype)
+Source:         dest
+Dst:            source
+Size:           1
+
+
+Collective Communication Routines
+
+MPI_Bcast (&buffer,count,datatype,root,comm) 
+------>
+Source:		root
+Dst:            ALL
+Size:           count*sizeof(datatype)
+Source:         ALL
+Dst:            root
+Size:           1
+
+MPI_Scatter (&sendbuf,sendcnt,sendtype,&recvbuf, 
+	     recvcnt,recvtype,root,comm)
+------>
+Source:		root
+Dst:            ALL
+Size:           sendcnt*sizeof(sendtype)
+Source:         ALL
+Dst:            root
+Size:           1
+
+MPI_Scatterv (*sendbuf, *sendcnts, *displs, sendtype,
+              *recvbuf, recvcnt, recvtype, root, comm )
+------>
+Source:		root
+Dst:            ALL
+Size:           sendcnt*sizeof(sendtype)
+Source:         ALL
+Dst:            root
+Size:           1
+
+
+MPI_Gather (&sendbuf,sendcnt,sendtype,&recvbuf, 
+	    recvcount,recvtype,root,comm) 
+------>
+Source:		ALL
+Dst:            root
+Size:           sendcnt*sizeof(sendtype)
+Source:         root
+Dst:            ALL
+Size:           1
+
+MPI_Gatherv (*sendbuf, sendcnt, sendtype,
+             *recvbuf, *recvcnts,  *displs, recvtype,
+              root, comm )
+------>
+Source:		ALL
+Dst:            root
+Size:           sendcnt*sizeof(sendtype)
+Source:         root
+Dst:            ALL
+Size:           1
+
+
+
+MPI_Allgather (&sendbuf,sendcount,sendtype,&recvbuf, 
+		recvcount,recvtype,comm)
+------>
+Source:		ALL
+Dst:            ALL
+Size:           sendcnt*sizeof(sendtype)
+Source:         ALL
+Dst:            ALL
+Size:           1
+
+MPI_Allgatherv (*sendbuf, sendcount, sendtype,
+                *recvbuf, recvcounts, displs,
+                 recvtype, comm )
+------>
+Source:		ALL
+Dst:            ALL
+Size:           sendcnt*sizeof(sendtype)
+Source:         ALL
+Dst:            ALL
+Size:           1
+
+
+MPI_Reduce (&sendbuf,&recvbuf,count,datatype,op,root,comm) 
+------>
+Source:		ALL
+Dst:            root
+Size:           count*sizeof(datatype)
+Source:         root
+Dst:            ALL
+Size:           1
+
+MPI_Allreduce (&sendbuf,&recvbuf,count,datatype,op,comm) 
+------>
+Source:		ALL
+Dst:            ALL
+Size:           count*sizeof(datatype)
+Source:         ALL
+Dst:            ALL
+Size:           1
+
+
+MPI_Reduce_scatter (&sendbuf,&recvbuf,recvcount,datatype, 
+		    op,comm) 
+------>
+Source:		ALL
+Dst:            ALL
+Size:           recvcount*sizeof(datatype)
+Source:         ALL
+Dst:            ALL
+Size:           1
+
+MPI_Alltoall (&sendbuf,sendcount,sendtype,&recvbuf, 
+		recvcnt,recvtype,comm) 
+------>
+Source:		ALL
+Dst:            ALL
+Size:           sendcount*sizeof(sendtype)
+Source:         ALL
+Dst:            ALL
+Size:           1
+
+MPI_Alltoallv (*sendbuf, *sendcnts, *sdispls, sendtype,
+               *recvbuf, *recvcnts, *rdispls, recvtype, comm )
+------>
+Source:		ALL
+Dst:            ALL
+Size:           sendcount*sizeof(sendtype)
+Source:         ALL
+Dst:            ALL
+Size:           1
+
+
+MPI_Scan (&sendbuf,&recvbuf,count,datatype,op,comm) 
+------>
+Source:		MPI_Comm_rank
+Dst:            MPI_Comm_rank+1
+Size:           count*sizeof(datatype)
+Source:         MPI_Comm_rank=1
+Dst:            MPI_Comm_rank
+Size:           1
+
+
+
+
+
+
+
+
+
+
+
