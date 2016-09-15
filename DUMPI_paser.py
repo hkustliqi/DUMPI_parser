@@ -11,6 +11,7 @@ flit_size = 1 #bytes
 header_size = 1 #flit
 ack_size = 1 #flit
 
+#TODO: add all MPI data types
 def MPI_Data_Type_to_size(datatype):
   if datatype == 2: # MPI char
     return 1
