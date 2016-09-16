@@ -27,8 +27,10 @@ def MPI_Data_Type_to_size(datatype):
     return 4
   elif datatype == 14: # MPI double
     return 8
+  elif datatype == 28: # user defined datatype
+    return 8
   else:
-    print('undefined MPI datatype')
+    print('undefined MPI datatype', datatype)
 
 def analyze_DUMPI(fd, matrix):
   lines = fd.readlines()
@@ -224,7 +226,7 @@ if __name__ == '__main__':
                   help='any one of the DUMPI log file series (format: ****_000*.txt)')
   ap.add_argument('npes',
                   help='total processing elements (totol number of log files)')
-  ap.add_argument('-flitsize',
+  ap.add_argument('flitsize',
                   help='flit size (in bytes)')
   args = ap.parse_args()
   main(args)
