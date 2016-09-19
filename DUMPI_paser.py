@@ -27,6 +27,8 @@ def MPI_Data_Type_to_size(datatype):
     return 4
   elif datatype == 14: # MPI double
     return 8
+  elif datatype == 15: # MPI long double
+    return 10
   elif datatype == 28: # user defined datatype
     return 8
   else:
