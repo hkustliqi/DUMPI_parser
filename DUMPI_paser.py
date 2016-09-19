@@ -12,16 +12,29 @@ header_size = 1 #flit
 ack_size = 1 #flit
 
 #TODO: add all MPI data types
+#unit is byte
 def MPI_Data_Type_to_size(datatype):
   if datatype == 2: # MPI char
     return 1
+  elif datatype == 3: # MPI signed char
+    return 1
+  elif datatype == 4: # MPI unsigned char
+    return 1
   elif datatype == 5: # MPI byte
     return 1
+  elif datatype == 6: # MPI WCHAR
+    return 4
   elif datatype == 7: # MPI short
+    return 2
+  elif datatype == 8: # MPI unsigned short
     return 2
   elif datatype == 9: # MPI int
     return 2
+  elif datatype == 10: # MPI unsigned int
+    return 2
   elif datatype == 11: # MPI long
+    return 4
+  elif datatype == 12: # MPI unsigned long
     return 4
   elif datatype == 13: # MPI float
     return 4
@@ -29,6 +42,12 @@ def MPI_Data_Type_to_size(datatype):
     return 8
   elif datatype == 15: # MPI long double
     return 10
+  elif datatype == 17: # MPI unsigned long long
+    return 8
+  elif datatype == 18: # MPI long long
+    return 8
+  elif datatype == 19: # MPI packed
+    return 8
   elif datatype == 28: # user defined datatype
     return 8
   else:
