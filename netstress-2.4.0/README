@@ -1,0 +1,101 @@
+/******************************************************************************/
+/*                                                                            */
+/* U//FOUO                                                                    */
+/* Version 2: August 30, 2012                                                 */
+/* Last revision: September 24, 2013                                          */
+/*                                                                            */
+/******************************************************************************/
+
+NAME
+
+        netstress - network stressing benchmark
+
+SYNOPSIS
+
+        netstress [OPTIONS]
+
+DESCRIPTION
+
+	Netstress is an parallel benchmark that tests data transfer speeds and
+	reliability of a network. It is a UPC, SHMEM, or MPI application.
+
+	Netstress begins by warming up the interconnect. Then, it performs an 
+	all-to-all for a specified number of iterations using a message of size
+	min_size inside each group of processing elements (PEs). Each iteration
+	the message size is doubled until the max_size message size is reached.
+
+	Total wall time and bandwidth are reported. A plotting utility is
+	provided to plot the results with GNUplot.
+	
+	Version 2 of netstress performs an all-to-all using either put, get, or
+	both, with iteratively doubling message sizes. Previously, both put and
+	get would be performed. The user also now has the option of partitioning
+	PEs into interest groups. In version 1, all PEs would be assigned to
+	the same group. Note that the number of groups must evenly divide the 
+	total number of PEs.
+
+	It is important to note that, when considering how much space to
+	allocate for the symmetric heap, each PE has both a send and receive
+	buffer, each of which is the size of the maximum message size. The
+	formula MIN_SYMMETRIC_HEAP_SIZE = 2 * MAX_MESSAGE_SIZE can be used to
+	compute the minimum symmetric heap size per PE.
+
+OPTIONS
+
+	-h, --help
+		Display this menu.
+
+	-a <get|put>, --all-to-all=<get|put>
+		All-to-all type. get or put. If the option is not used, the
+		default behavior is to both get and put.
+
+	-d, --dry-run
+		Print the header and then exit.
+
+	-g INT, --groups=INT
+		Partition PEs into GRPS groups. Default is 1.
+
+	-i INT, --iterations=INT
+		Run ITER loop iterations for each message size.
+		Default is 30.
+
+	-m SIZE, --min-size=SIZE
+		Begin looping with buffer size SIZE. Default is 8 bytes.
+
+	-M SIZE, --max-size=SIZE
+		Loop until reaching a buffer of size SIZE. Default is 8 MB.
+
+	-q, --quiet
+		Quiet output. Do not print group stats.
+
+	-Q, --very-quiet
+		Just print summary stats and a header suitable for GNUplot.
+
+	-t DOUBLE --timeout=DOUBLE
+		Run this number of seconds, wait until current iteration 
+		completes, then abort. Note that there is a barrier between 
+		each iteration when running in this mode.
+
+	-v, --version
+		Print version number.
+
+COMMON USE CASES
+
+        Run separately on each rack of 16-rack system using puts only:
+        $ srun -N 1024 --ntasks-per-node 24 ./netstress -g 16 -a put
+       
+        Run with a message size of exactly 1GB on 1024 nodes:
+        $ srun -N 1024 ./netstress -m 1g -M 1g
+       
+        Redirect the formatted output to a file, and then plot it with gnuplot:
+        $ srun -N 1024 ./netstress -Q > data.out 
+        $ ./netstress_plot data.out data.png
+
+	Run for one hour and then quit:
+	$ srun -N 1024 ./netstress -t 3600
+
+POTENTIAL PITFALLS
+
+       	When specifying number of PEs per group, the PEs are grouped by the 
+	resource manager, not netstress. The user is limited in this aspect in
+	that they cannot assign individual PEs to certain groups.	
