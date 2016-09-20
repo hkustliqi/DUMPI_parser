@@ -230,7 +230,7 @@ def main(args):
   
   #print(traffic_matrix)
   trafficOutput = open('trafficmatrix.csv', 'w')
-  writer = csv.writer(trafficOutput, delimiter=';', quotechar='"')
+  writer = csv.writer(trafficOutput, delimiter=',', quotechar='"')
   writer.writerows(traffic_matrix)
   trafficOutput.close()
 
@@ -240,8 +240,8 @@ def main(args):
     injection_rate[i] /= max_sum
     injection_rate[i] = '%.4f'%(injection_rate[i])
 
-  outfile = open('injectionrate.csv', 'w')
-  writer = csv.writer(outfile, delimiter=';', quotechar='"')
+  outfile = open('relativeinjection.csv', 'w')
+  writer = csv.writer(outfile, delimiter=',', quotechar='"')
   for element in injection_rate:
     writer.writerow([element])
   outfile.close()
