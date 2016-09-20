@@ -19,10 +19,10 @@ def main(args):
     for j in range(4):
       s[len(s)-8+j] = num[j]
     inputName = ''.join(s)
-    outputName = inputName.replace('bin', 'txt')
-
-    os.system('LD_LIBRARY_PATH=/home/qi/sst-dumpi/lib/ /home/qi/sst-dumpi/bin/dumpi2ascii ' + inputName + ' > ' + outputName)
-
+    outputTxt = inputName.replace('bin', 'txt')
+    # dumpi2ascii converts bin to txt
+    os.system('LD_LIBRARY_PATH=/home/qi/sst-dumpi/lib/ /home/qi/sst-dumpi/bin/dumpi2ascii ' + inputName + ' > ' + outputTxt)
+    
 
 if __name__ == '__main__':
   ap = argparse.ArgumentParser()
