@@ -209,10 +209,6 @@ def main(args):
     with opener(fileName, 'rb') as fd:
       analyze_DUMPI(fd, matrix)
 
-  # final matrix collected
-  #for i in range(npes):
-  #  print(matrix[i])
-
   # compute traffic matrix
   traffic_matrix = copy.deepcopy(matrix)
   injection_rate = [0 for x in range(npes)]
@@ -227,18 +223,21 @@ def main(args):
     for j in range(len(traffic_matrix[0])):
       traffic_matrix[i][j] /= sum
       traffic_matrix[i][j] = '%.4f'%(traffic_matrix[i][j])
-  
-  #print(traffic_matrix)
-  trafficOutput = open('trafficmatrix.csv', 'w')
-  writer = csv.writer(trafficOutput, delimiter=',', quotechar='"')
-  writer.writerows(traffic_matrix)
-  trafficOutput.close()
-
 
   # compute injection rate
   for i in range(npes):
     injection_rate[i] /= max_sum
     injection_rate[i] = '%.4f'%(injection_rate[i])
+  
+  totaltraffic = open('totaltraffic.csv', 'w')
+  writer = csv.writer(totaltraffic, delimiter=',', quotechar='"')
+  writer.writerows(matrix)
+  totaltraffic.close()
+
+  trafficmatrix = open('trafficmatrix.csv', 'w')
+  writer = csv.writer(trafficmatrix, delimiter=',', quotechar='"')
+  writer.writerows(traffic_matrix)
+  trafficmatrix.close()
 
   outfile = open('relativeinjection.csv', 'w')
   writer = csv.writer(outfile, delimiter=',', quotechar='"')
