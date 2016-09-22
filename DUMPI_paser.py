@@ -66,16 +66,6 @@ def analyze_DUMPI(fd, matrix):
       rank = re.search('rank=(\d+)', rankLine).group(1)
       src = int(rank)
     # map MPI functions to traffic
-    # MPI_Bcast
-    elif 'MPI_Bcast entering' in lineStr:
-      countLine = lines[i+1].decode('utf-8')
-      count = re.search('count=(\d+)', countLine).group(1)
-      datatypeLine = lines[i+2].decode('utf-8')
-      datatype = re.search('datatype=(\d+)', datatypeLine).group(1)
-      size = MPI_Data_Type_to_size(int(datatype))
-      for i in range(len(matrix[0])):
-        matrix[src][i] += header_size + math.ceil (int(count) * size / flit_size)
-        matrix[i][src] += ack_size
     # MPI_send and variations
     elif ('MPI_Send entering' or 'MPI_Isend entering' or 'MPI_Ssend entering' or 'MPI_Issend entering' or 'MPI_Sendrecv entering') in lineStr:
       countLine = lines[i+1].decode('utf-8')
@@ -87,6 +77,16 @@ def analyze_DUMPI(fd, matrix):
       dest = int(re.search('dest=(\d+)', destLine).group(1))
       matrix[src][dest] += header_size + math.ceil (int(count) * size / flit_size)
       matrix[dest][src] += ack_size
+    # MPI_Bcast
+    elif 'MPI_Bcast entering' in lineStr:
+      countLine = lines[i+1].decode('utf-8')
+      count = re.search('count=(\d+)', countLine).group(1)
+      datatypeLine = lines[i+2].decode('utf-8')
+      datatype = re.search('datatype=(\d+)', datatypeLine).group(1)
+      size = MPI_Data_Type_to_size(int(datatype))
+      for i in range(len(matrix[0])):
+        matrix[src][i] += header_size + math.ceil (int(count) * size / len(matrix) /flit_size)
+        matrix[i][src] += ack_size
     # MPI_Alltoall
     # TODO: verify correctness
     elif ('MPI_Alltoall entering' or 'MPI_Alltoallv entering') in lineStr:
@@ -97,7 +97,7 @@ def analyze_DUMPI(fd, matrix):
       size = MPI_Data_Type_to_size(int(datatype))
       for i in range(len(matrix)):
         for j in range(len(matrix[0])):
-          matrix[i][j] += header_size + math.ceil (int(count) * size / flit_size)
+          matrix[i][j] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
           matrix[j][i] += ack_size
     # MPI_Gather
     elif ('MPI_Gather entering' or 'MPI_Gatherv entering') in lineStr:
@@ -109,7 +109,7 @@ def analyze_DUMPI(fd, matrix):
       rootLine = lines[i+6].decode('utf-8')
       root = re.search('root=(\d+)', countLine).group(1)
       for i in range(len(matrix)):
-        matrix[i][int(root)] += header_size + math.ceil (int(count) * size / flit_size)
+        matrix[i][int(root)] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[int(root)][i] += ack_size
     # MPI_Scatter
     elif ('MPI_Scatter entering' or 'MPI_Scatterv entering') in lineStr:
@@ -121,7 +121,7 @@ def analyze_DUMPI(fd, matrix):
       rootLine = lines[i+6].decode('utf-8')
       root = re.search('root=(\d+)', countLine).group(1)
       for i in range(len(matrix)):
-        matrix[int(root)][i] += header_size + math.ceil (int(count) * size / flit_size)
+        matrix[int(root)][i] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[i][int(root)] += ack_size
     # MPI_Reduce
     elif ('MPI_Reduce entering') in lineStr:
@@ -133,7 +133,7 @@ def analyze_DUMPI(fd, matrix):
       rootLine = lines[i+4].decode('utf-8')
       root = re.search('root=(\d+)', countLine).group(1)
       for i in range(len(matrix)):
-        matrix[i][int(root)] += header_size + math.ceil (int(count) * size / flit_size)
+        matrix[i][int(root)] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[int(root)][i] += ack_size
     # MPI_Allgather
     elif ('MPI_Allgather entering' or 'MPI_Allgatherv entering') in lineStr:
@@ -144,7 +144,7 @@ def analyze_DUMPI(fd, matrix):
       size = MPI_Data_Type_to_size(int(datatype))
       for i in range(len(matrix)):
         for j in range(len(matrix[0])):
-          matrix[i][j] += header_size + math.ceil (int(count) * size / flit_size)
+          matrix[i][j] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
           matrix[j][i] += ack_size
     # MPI_Allreduce
     elif ('MPI_Allreduce entering') in lineStr:
@@ -155,7 +155,7 @@ def analyze_DUMPI(fd, matrix):
       size = MPI_Data_Type_to_size(int(datatype))
       for i in range(len(matrix)):
         for j in range(len(matrix[0])):
-          matrix[i][j] += header_size + math.ceil (int(count) * size / flit_size)
+          matrix[i][j] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
           matrix[j][i] += ack_size
     # MPI_Reduce_Scatter
     elif ('MPI_Reduce_scatter entering') in lineStr:
@@ -166,7 +166,7 @@ def analyze_DUMPI(fd, matrix):
       size = MPI_Data_Type_to_size(int(datatype))
       for i in range(len(matrix)):
         for j in range(len(matrix[0])):
-          matrix[i][j] += header_size + math.ceil (int(count) * size / flit_size)
+          matrix[i][j] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
           matrix[j][i] += ack_size
     # MPI_Put
     elif ('MPI_Put entering') in lineStr:
