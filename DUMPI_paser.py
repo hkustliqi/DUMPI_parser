@@ -84,11 +84,12 @@ def analyze_DUMPI(fd, matrix):
       datatypeLine = lines[i+2].decode('utf-8')
       datatype = re.search('datatype=(\d+)', datatypeLine).group(1)
       size = MPI_Data_Type_to_size(int(datatype))
+      rootLine = lines[i+3].decode('utf-8')
+      root = re.search('root=(\d+)', rootLine).group(1)
       for i in range(len(matrix[0])):
-        matrix[src][i] += header_size + math.ceil (int(count) * size / len(matrix) /flit_size)
-        matrix[i][src] += ack_size
+        matrix[int(root)][i] += header_size + math.ceil (int(count) * size / len(matrix) /flit_size)
+        matrix[i][int(root)] += ack_size
     # MPI_Alltoall
-    # TODO: verify correctness
     elif ('MPI_Alltoall entering' or 'MPI_Alltoallv entering') in lineStr:
       countLine = lines[i+1].decode('utf-8')
       count = re.search('sendcount=(\d+)', countLine).group(1)
