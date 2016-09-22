@@ -1,0 +1,132 @@
+
+NAME
+
+	HAMR - Huge Asynchronous 128-bit MSB Radix Sort
+
+SYNOPSIS
+
+	hamr [OPTIONS] GiB_OF_MEMORY
+
+DESCRIPTION
+
+	HAMR fills GiB_OF_MEMORY worth of random 128-bit unsigned integers
+	and sorts them in parallel. The sort is in-place (with an arbitrarily
+	small buffer used for scratch space) and will use a variety of message
+	sizes for the key exchange.  Note: it is very easy to oversubscribe
+	memory with this benchmark (see notes for guidance).  This benchmark
+	should perform well on systems with excellent all-to-all and atomic
+	fetch and increment performance.
+
+	If running with a number of PEs that is not a power of two, then HAMR
+	will generate the random data in such a way as to ensure that the high
+	ceil(log_2(N)) bits will be in the range 0 to N-1 for N PEs.
+
+OPTIONS
+
+	-h --help
+		Display this help menu and then quit.
+
+	-v --version
+		Display version information and then quit.
+
+	-d --dry-run
+		Print out problem size and memory information, then exit.
+
+	-s SEED --seed=SEED
+		Use SEED to seed the random number generator.
+		The default seed is the Unix epoch time.
+
+	-q --quiet
+		Print timing information only.  Useful for redirection
+		to GNUplot for graphing results.
+
+	--do-final-sort
+		Perform the final serial sort on each PE after the key
+		exchange.  Default is no.
+
+	-c LEVEL --check=LEVEL
+		Verification of the key exchange phase.
+		LEVEL=0 : No verifcation is performed.
+		LEVEL=1 : Verification is performed only after last
+		          message size. (Default)
+		LEVEL=2 : Verification after EVERY message size.
+
+	-m SIZE --min-message-size=SIZE
+		Start by using messages of SIZE bytes.  SIZE may be in
+		the form x^y.  Default is 10 (1 KiB).
+
+	-M SIZE --max-message-size=SIZE
+		Use a maximum message size of SIZE bytes.
+		SIZE may be in the form x^y.  Default is 2^20 (1 MiB).
+
+	--step=FACTOR
+		Multiple by FACTOR when iterating over message sizes.
+		Must be >= 1.0.  Default is 2.0.
+
+	-i N --iterations=N
+		For each message size, perform N iterations of key
+		exchange.  New random data is generated between
+		each iteration.  Default is N=1.
+
+	--time-init
+		Print out the amount of time spent in start_pes.
+
+ADVANCED OPTIONS
+
+	--throttle=THROTTLE
+		Sets the synchronization throttle position.  Synchronization
+		happens when each PE has transmitted a block of
+		WORKSPACE * THROTTLE bytes.  A value of 0 inserts the maximum
+		number of barriers.  Default is 0.9.  Values greater than 1.0
+		are possible, but not recommended because it can introduce
+		errors if there is a large difference in the running times
+		of the PEs. High throttle values would make it possible, for
+		instance, for a particularly fast PE to send all of its data
+		to a slow remote PE before the remote PE has had a chance
+		to create adequate space in its data array. In general, large
+		throttle values may require larger scratch sizes in order to
+		ensure correctness.  The particular balance will be system
+		dependent.
+
+	--log-scratch-size=LOG_SIZE
+		Each PE will allocate WORKSPACE=2^LOG_SIZE bytes of scratch
+		space to use for the sort.  Default is 24.  This value controls
+		the "in-placeness" of the sort.  As the scratch space increases
+		the amount of data to sort decreases (for a fixed memory size).
+		Larger scratch spaces require less synchronization.
+
+USAGE AND OUTPUT NOTES
+
+	This benchmark consists of two phases: an asynchronous parallel key
+	exchange and a local MSB radix sort.
+
+	In phase 1, each PE allocates GiB_OF_MEMORY on the symmetric heap, 
+	then fills 90% of that memory with random data.  It also allocates
+	memory for its local scratch space on the private heap, then performs
+	the following loop:
+
+	for each m from min-message-size to max-message-size
+	do
+		1. Allocate NPES * m bytes on the private heap to serve as
+		   sending buckets.
+		2. Randomize the data to be sorted.
+		3. Copy the first WORKSPACE bytes from the unsorted data to the
+		   scratch space.
+		4. Iterate over the unsorted data moving elements into the
+		   destination buckets.
+		5. When any bucket is full send it.
+		6. If the amount sent is a multiple of WORKSPACE * THROTTLE
+		   then synchronize.
+	done
+
+	It is easy to oversubscribe memory for larger message sizes if it is
+	also desired to fill memory with data to be sorted.  Use the -m, -M
+	options to ensure that
+	GiB_OF_MEMORY*2^30 + NPES * NPES * message_size + WORKSPACE is less
+	than the sum of memory on all nodes in use for all message sizes.
+	Use the --log-scratch-size option to control the size of WORKSPACE.
+
+	The Wall time column in the output consists only of the communication
+	time and does not include any time generating the random numbers at
+	each iteration.  For large problem sizes the random data generation
+	time will not be insignificant.

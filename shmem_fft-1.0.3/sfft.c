@@ -181,6 +181,7 @@ sfft(float *_M, float *_X, uint64_t L, uint64_t l, uint64_t K, uint64_t k,
       MPI_Put(&M[src_row][src_col][0], 2 * K_per_pe, MPI_FLOAT, dst_row_block, 0,
               2 * K_per_pe, MPI_FLOAT, win);
       MPI_Win_fence(0, win);
+      MPI_Win_free(&win);
     }
   }
 
@@ -306,9 +307,9 @@ main(int argc, char *argv[])
       MPI_Win win;
       MPI_Win_create(X, 2, sizeof(float), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
       MPI_Win_fence(0, win);
-      MPI_Put(&A[dest], 2, MPI_FLOAT, dest, 0,
-              2, MPI_FLOAT, win);
+      MPI_Put(&A[dest], 2, MPI_FLOAT, dest, 0, 2, MPI_FLOAT, win);
       MPI_Win_fence(0, win);
+      MPI_Win_free(&win);
     }
   }
 #endif
