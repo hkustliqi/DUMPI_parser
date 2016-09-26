@@ -210,6 +210,10 @@ def main(args):
     with opener(fileName, 'rb') as fd:
       analyze_DUMPI(fd, matrix)
 
+  # set diagonal to 0
+  for i in range(npes):
+    matrix[i][i] = 0
+
   # compute traffic matrix
   traffic_matrix = copy.deepcopy(matrix)
   injection_rate = [0 for x in range(npes)]
