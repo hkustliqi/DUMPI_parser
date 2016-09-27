@@ -301,10 +301,10 @@ main(int argc, char *argv[])
     if (id == 0)
       printf("Warming up.\n");
     int dest;
+    MPI_Win win;
     for (i = 0; i < W; i++) {
       dest = (id + i) % W;
       //shmem_float_put(X, &A[dest], 2, dest);
-      MPI_Win win;
       MPI_Win_create(X, 2, sizeof(float), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
       MPI_Win_fence(0, win);
       MPI_Put(&A[dest], 2, MPI_FLOAT, dest, 0, 2, MPI_FLOAT, win);

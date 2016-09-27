@@ -120,25 +120,37 @@ put_buckets(int dest, const uint128 * restrict send_buckets,
 
   if (send_counts[dest] > 0) {
     //dest_index = shmem_long_fadd((long *) recv_count, send_counts[dest], dest);
+
+   /* MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
+        MPI_LONG, dest, MPI_Aint target_disp,
+        MPI_ADD, MPI_Win win); */
 //Qi: the following MPI_GET was causing segamentation fault. Disabling it for now.
 //    long * recvData;
-    MPI_Win win;
-//    MPI_Win_create(&recvData, 1, sizeof(MPI_LONG), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-//    MPI_Win_fence(0, win);
-//    MPI_Get((long *) recv_count, 1, MPI_LONG, dest, 0, 1, MPI_LONG, win);
-//    MPI_Win_fence(0, win);
-//    MPI_Win_free(&win);
-//    dest_index = send_counts[dest] + *recvData;
+
+/*    MPI_Win_create(&recvData, 1, sizeof(MPI_LONG), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    MPI_Win_fence(0, win);
+    MPI_Get((long *) recv_count, 1, MPI_LONG, dest, 0, 1, MPI_LONG, win);
+    MPI_Win_fence(0, win);
+    MPI_Win_free(&win);
+    dest_index = send_counts[dest] + *recvData;
+*/
     dest_index = send_counts[dest];
 
     //shmem_put128(&recv_buff[dest_index], &send_buckets[dest * bucket_len],
     //             send_counts[dest], dest);
+    MPI_Win win;
     MPI_Win_create(&recv_buff[dest_index], send_counts[dest], sizeof(MPI_LONG_DOUBLE), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
     MPI_Win_fence(0, win);
     MPI_Put(&send_buckets[dest * bucket_len], send_counts[dest], MPI_LONG_DOUBLE, dest, 0, send_counts[dest], MPI_LONG_DOUBLE, win);
     MPI_Win_fence(0, win);
     MPI_Win_free(&win);
 
+    /*MPI_Request req;
+    MPI_Irecv(&recv_buff[0], send_counts[dest], MPI_BYTE,
+		dest, 0, MPI_COMM_WORLD, &req);
+    MPI_Send(&send_buckets[dest * bucket_len], send_counts[dest], MPI_BYTE,
+	       dest, 0, MPI_COMM_WORLD);
+    */
     send_counts[dest] = 0;
   }
 }
@@ -211,7 +223,7 @@ key_exchange(uint128 * restrict table, uint64_t sort_count,
       //BARRIER();
       MPI_Barrier(MPI_COMM_WORLD);
   }
-
+printf("exchange 1 \n");
 
   // Take care of the keys saved in the scratch space
   for (ii = 0; ii < scratch_len; ii++) {
@@ -228,7 +240,7 @@ key_exchange(uint128 * restrict table, uint64_t sort_count,
       //BARRIER();
       MPI_Barrier(MPI_COMM_WORLD);
   }
-
+printf("exchange 2 \n");
   // Flush the remaining partially filled buckets.
   for (ii = 0; ii < g_npes; ii++) {
     int dest = (ii + RANK) % g_npes;
@@ -439,11 +451,11 @@ printf("Rank = %u, min= %u, max = %u, step = %f \n", RANK, min_msg_size, max_msg
       MPI_Barrier(MPI_COMM_WORLD);
 
       bucket_len = m / sizeof(uint128);
-
+printf("start of key exchange \n");
       recv_count = key_exchange(table, fill_count, scratch_table, scratch_len,
                                 bucket_len, block_size, RANK);
       timer_stop(&t_exch);
-
+printf("end of key exchange \n");
       if (options.opt_check_level >= 2) {
         verify_exchange(table, fill_count, recv_count, options.flag_quiet, RANK, NPES);
       }
@@ -505,7 +517,8 @@ printf("Rank = %u, min= %u, max = %u, step = %f \n", RANK, min_msg_size, max_msg
 
 cleanup:
 #ifndef _SGI_SOURCE
-  shmem_finalize();
+  //shmem_finalize();
+  MPI_Finalize();
 #endif
 
   return (retval);
