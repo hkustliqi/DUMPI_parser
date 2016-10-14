@@ -101,7 +101,7 @@ def analyze_DUMPI(fd, matrix):
           matrix[i][j] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
           matrix[j][i] += ack_size
     # MPI_Gather
-    elif any (x in lineStr for x in ['MPI_Gather entering', 'MPI_Gatherv entering']):
+    elif any (x in lineStr for x in ['MPI_Gather entering']):
       countLine = lines[i+2].decode('utf-8')
       count = re.search('sendcount=(\d+)', countLine).group(1)
       datatypeLine = lines[i+3].decode('utf-8')
@@ -112,6 +112,18 @@ def analyze_DUMPI(fd, matrix):
       for i in range(len(matrix)):
         matrix[i][int(root)] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[int(root)][i] += ack_size
+    # MPI_Gatherv
+    elif any (x in lineStr for x in ['MPI_Gatherv entering']):
+      datatypeLine = lines[i+3].decode('utf-8')
+      datatype = re.search('sendtype=(\d+)', datatypeLine).group(1)
+      size = MPI_Data_Type_to_size(int(datatype))
+      countLine = lines[i+4].decode('utf-8')
+      recvcount = [int(s) for s in re.findall(r'\d+', countLine)]
+      recvcount.pop(0)
+      for i in range(len(matrix)):
+        for j in range(len(matrix[0])):
+          matrix[i][j] += header_size + math.ceil (recvcount[i] * size / len(matrix) / flit_size)
+          matrix[j][i] += ack_size
     # MPI_Scatter
     elif any (x in lineStr for x in ['MPI_Scatter entering', 'MPI_Scatterv entering']):
       countLine = lines[i+2].decode('utf-8')
@@ -149,14 +161,15 @@ def analyze_DUMPI(fd, matrix):
           matrix[j][i] += ack_size
     # MPI_Allgatherv
     elif any (x in lineStr for x in ['MPI_Allgatherv entering']):
-      countLine = lines[i+2].decode('utf-8')
-      count = re.search('sendcount=(\d+)', countLine).group(1)
       datatypeLine = lines[i+3].decode('utf-8')
       datatype = re.search('sendtype=(\d+)', datatypeLine).group(1)
       size = MPI_Data_Type_to_size(int(datatype))
+      countLine = lines[i+4].decode('utf-8')
+      recvcount = [int(s) for s in re.findall(r'\d+', countLine)]
+      recvcount.pop(0)
       for i in range(len(matrix)):
         for j in range(len(matrix[0])):
-          matrix[i][j] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
+          matrix[i][j] += header_size + math.ceil (recvcount[i] * size / len(matrix) / flit_size)
           matrix[j][i] += ack_size
     # MPI_Allreduce
     elif ('MPI_Allreduce entering') in lineStr:
