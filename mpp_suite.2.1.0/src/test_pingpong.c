@@ -123,7 +123,7 @@ int main (int argc, char *argv[])
   niters = atol (argv[3]);
 
   // touch all memory, warm up interconnect
-  do_warmup(&br, MY_GTHREAD, GTHREADS);
+  //do_warmup(&br, MY_GTHREAD, GTHREADS);
 
   // init balls
 #if defined(__UPC__)
@@ -153,5 +153,6 @@ int main (int argc, char *argv[])
   //mpp_barrier_all();
   MPI_Barrier(MPI_COMM_WORLD);
   //mpp_finalize();  /* Added this, else hangs with upc */
+  MPI_Finalize();
   return 0;
 }

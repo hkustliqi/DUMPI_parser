@@ -108,7 +108,7 @@ def analyze_DUMPI(fd, matrix):
       datatype = re.search('sendtype=(\d+)', datatypeLine).group(1)
       size = MPI_Data_Type_to_size(int(datatype))
       rootLine = lines[i+6].decode('utf-8')
-      root = re.search('root=(\d+)', countLine).group(1)
+      root = re.search('root=(\d+)', rootLine).group(1)
       for i in range(len(matrix)):
         matrix[i][int(root)] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[int(root)][i] += ack_size
@@ -120,7 +120,7 @@ def analyze_DUMPI(fd, matrix):
       datatype = re.search('sendtype=(\d+)', datatypeLine).group(1)
       size = MPI_Data_Type_to_size(int(datatype))
       rootLine = lines[i+6].decode('utf-8')
-      root = re.search('root=(\d+)', countLine).group(1)
+      root = re.search('root=(\d+)', rootLine).group(1)
       for i in range(len(matrix)):
         matrix[int(root)][i] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[i][int(root)] += ack_size
@@ -132,7 +132,7 @@ def analyze_DUMPI(fd, matrix):
       datatype = re.search('datatype=(\d+)', datatypeLine).group(1)
       size = MPI_Data_Type_to_size(int(datatype))
       rootLine = lines[i+4].decode('utf-8')
-      root = re.search('root=(\d+)', countLine).group(1)
+      root = re.search('root=(\d+)', rootLine).group(1)
       for i in range(len(matrix)):
         matrix[i][int(root)] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[int(root)][i] += ack_size

@@ -120,10 +120,13 @@ put_buckets(int dest, const uint128 * restrict send_buckets,
 
   if (send_counts[dest] > 0) {
     //dest_index = shmem_long_fadd((long *) recv_count, send_counts[dest], dest);
-
-   /* MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
-        MPI_LONG, dest, MPI_Aint target_disp,
-        MPI_ADD, MPI_Win win); */
+ /*   MPI_Win win;
+    MPI_Win_create((long *) recv_count, send_counts[dest], sizeof(MPI_LONG), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    MPI_Win_fence(0, win);
+    MPI_Fetch_and_op(&send_counts[dest], &dest_index, MPI_LONG, dest, 0, MPI_SUM, win);
+    MPI_Win_fence(0, win);
+    MPI_Win_free(&win);
+*/
 //Qi: the following MPI_GET was causing segamentation fault. Disabling it for now.
 //    long * recvData;
 
@@ -131,10 +134,10 @@ put_buckets(int dest, const uint128 * restrict send_buckets,
     MPI_Win_fence(0, win);
     MPI_Get((long *) recv_count, 1, MPI_LONG, dest, 0, 1, MPI_LONG, win);
     MPI_Win_fence(0, win);
-    MPI_Win_free(&win);
+    MPI_Win_free(&win);    
     dest_index = send_counts[dest] + *recvData;
 */
-    dest_index = send_counts[dest];
+    //dest_index = send_counts[dest];
 
     //shmem_put128(&recv_buff[dest_index], &send_buckets[dest * bucket_len],
     //             send_counts[dest], dest);
@@ -144,6 +147,7 @@ put_buckets(int dest, const uint128 * restrict send_buckets,
     MPI_Put(&send_buckets[dest * bucket_len], send_counts[dest], MPI_LONG_DOUBLE, dest, 0, send_counts[dest], MPI_LONG_DOUBLE, win);
     MPI_Win_fence(0, win);
     MPI_Win_free(&win);
+
 
     /*MPI_Request req;
     MPI_Irecv(&recv_buff[0], send_counts[dest], MPI_BYTE,
