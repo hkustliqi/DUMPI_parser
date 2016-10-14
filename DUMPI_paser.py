@@ -114,16 +114,18 @@ def analyze_DUMPI(fd, matrix):
         matrix[int(root)][i] += ack_size
     # MPI_Gatherv
     elif any (x in lineStr for x in ['MPI_Gatherv entering']):
-      datatypeLine = lines[i+3].decode('utf-8')
+      datatypeLine = lines[i+4].decode('utf-8')
       datatype = re.search('sendtype=(\d+)', datatypeLine).group(1)
       size = MPI_Data_Type_to_size(int(datatype))
-      countLine = lines[i+4].decode('utf-8')
+      countLine = lines[i+5].decode('utf-8')
       recvcount = [int(s) for s in re.findall(r'\d+', countLine)]
       recvcount.pop(0)
-      for i in range(len(matrix)):
-        for j in range(len(matrix[0])):
-          matrix[i][j] += header_size + math.ceil (recvcount[i] * size / len(matrix) / flit_size)
-          matrix[j][i] += ack_size
+      if recvcount:
+      	rootLine = lines[i+8].decode('utf-8')
+      	root = re.search('root=(\d+)', rootLine).group(1)
+      	for i in range(len(matrix)):
+          matrix[i][int(root)] += header_size + math.ceil (recvcount[i] * size / len(matrix) / flit_size)
+          matrix[int(root)][i] += ack_size
     # MPI_Scatter
     elif any (x in lineStr for x in ['MPI_Scatter entering', 'MPI_Scatterv entering']):
       countLine = lines[i+2].decode('utf-8')
@@ -134,6 +136,7 @@ def analyze_DUMPI(fd, matrix):
       rootLine = lines[i+6].decode('utf-8')
       root = re.search('root=(\d+)', rootLine).group(1)
       for i in range(len(matrix)):
+        print(i)
         matrix[int(root)][i] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[i][int(root)] += ack_size
     # MPI_Reduce
@@ -217,7 +220,7 @@ def analyze_DUMPI(fd, matrix):
       matrix[src][dest] += ack_size
     # print other MPI_functions
     #elif ('entering') in lineStr:
-    #  print(lineStr)
+     # print(lineStr)
 
 def main(args):
   npes = int(args.npes)
