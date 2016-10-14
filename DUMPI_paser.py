@@ -67,7 +67,7 @@ def analyze_DUMPI(fd, matrix):
       src = int(rank)
     # map MPI functions to traffic
     # MPI_send and variations
-    elif ('MPI_Send entering' or 'MPI_Isend entering' or 'MPI_Ssend entering' or 'MPI_Issend entering' or 'MPI_Sendrecv entering') in lineStr:
+    elif any (x in lineStr for x in ['MPI_Send entering', 'MPI_Isend entering', 'MPI_Ssend entering', 'MPI_Issend entering', 'MPI_Sendrecv entering']):
       countLine = lines[i+1].decode('utf-8')
       count = re.search('count=(\d+)', countLine).group(1)
       datatypeLine = lines[i+2].decode('utf-8')
@@ -90,7 +90,7 @@ def analyze_DUMPI(fd, matrix):
         matrix[int(root)][i] += header_size + math.ceil (int(count) * size / len(matrix) /flit_size)
         matrix[i][int(root)] += ack_size
     # MPI_Alltoall
-    elif ('MPI_Alltoall entering' or 'MPI_Alltoallv entering') in lineStr:
+    elif any (x in lineStr for x in ['MPI_Alltoall entering', 'MPI_Alltoallv entering']):
       countLine = lines[i+1].decode('utf-8')
       count = re.search('sendcount=(\d+)', countLine).group(1)
       datatypeLine = lines[i+2].decode('utf-8')
@@ -101,7 +101,7 @@ def analyze_DUMPI(fd, matrix):
           matrix[i][j] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
           matrix[j][i] += ack_size
     # MPI_Gather
-    elif ('MPI_Gather entering' or 'MPI_Gatherv entering') in lineStr:
+    elif any (x in lineStr for x in ['MPI_Gather entering', 'MPI_Gatherv entering']):
       countLine = lines[i+2].decode('utf-8')
       count = re.search('sendcount=(\d+)', countLine).group(1)
       datatypeLine = lines[i+3].decode('utf-8')
@@ -113,7 +113,7 @@ def analyze_DUMPI(fd, matrix):
         matrix[i][int(root)] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[int(root)][i] += ack_size
     # MPI_Scatter
-    elif ('MPI_Scatter entering' or 'MPI_Scatterv entering') in lineStr:
+    elif any (x in lineStr for x in ['MPI_Scatter entering', 'MPI_Scatterv entering']):
       countLine = lines[i+2].decode('utf-8')
       count = re.search('sendcount=(\d+)', countLine).group(1)
       datatypeLine = lines[i+3].decode('utf-8')
@@ -137,10 +137,21 @@ def analyze_DUMPI(fd, matrix):
         matrix[i][int(root)] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
         matrix[int(root)][i] += ack_size
     # MPI_Allgather
-    elif ('MPI_Allgather entering' or 'MPI_Allgatherv entering') in lineStr:
+    elif any (x in lineStr for x in ['MPI_Allgather entering']):
       countLine = lines[i+1].decode('utf-8')
       count = re.search('sendcount=(\d+)', countLine).group(1)
       datatypeLine = lines[i+2].decode('utf-8')
+      datatype = re.search('sendtype=(\d+)', datatypeLine).group(1)
+      size = MPI_Data_Type_to_size(int(datatype))
+      for i in range(len(matrix)):
+        for j in range(len(matrix[0])):
+          matrix[i][j] += header_size + math.ceil (int(count) * size / len(matrix) / flit_size)
+          matrix[j][i] += ack_size
+    # MPI_Allgatherv
+    elif any (x in lineStr for x in ['MPI_Allgatherv entering']):
+      countLine = lines[i+2].decode('utf-8')
+      count = re.search('sendcount=(\d+)', countLine).group(1)
+      datatypeLine = lines[i+3].decode('utf-8')
       datatype = re.search('sendtype=(\d+)', datatypeLine).group(1)
       size = MPI_Data_Type_to_size(int(datatype))
       for i in range(len(matrix)):
@@ -191,6 +202,9 @@ def analyze_DUMPI(fd, matrix):
       dest = int(re.search('targetrank=(\d+)', destLine).group(1))
       matrix[dest][src] += header_size + math.ceil (int(count) * size / flit_size)
       matrix[src][dest] += ack_size
+    # print other MPI_functions
+    #elif ('entering') in lineStr:
+    #  print(lineStr)
 
 def main(args):
   npes = int(args.npes)
