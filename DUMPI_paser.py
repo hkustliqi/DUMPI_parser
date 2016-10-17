@@ -73,7 +73,7 @@ def analyze_DUMPI(fd, matrix):
       countLine = lines[i+1].decode('utf-8')
       count = re.search('count=(\d+)', countLine).group(1)
       datatypeLine = lines[i+2].decode('utf-8')
-      datatype = re.search('datatype=(\d+)', datatypeLine).group(1)
+      datatype = re.search('type=(\d+)', datatypeLine).group(1)
       size = MPI_Data_Type_to_size(int(datatype))
       destLine = lines[i+3].decode('utf-8')
       dest = int(re.search('dest=(\d+)', destLine).group(1))
@@ -232,8 +232,9 @@ def analyze_DUMPI(fd, matrix):
       matrix[src][dest] += ack_size
     # print other MPI_functions
     elif ('entering') in lineStr:
-      if all (x not in lineStr for x in ['MPI_Init', 'MPI_Comm_size', 'MPI_Waitall', 'MPI_Irecv', \
-      'MPI_Wtime', 'MPI_Finalize', 'MPI_Win_create', 'MPI_Win_free', 'MPI_Win_fence', 'MPI_Barrier']):
+      if all (x not in lineStr for x in ['MPI_Init', 'MPI_Comm_size', 'MPI_Waitall', 'MPI_Recv', 'MPI_Irecv', \
+      'MPI_Wtime', 'MPI_Wait', 'MPI_Finalize', 'MPI_Win_create', 'MPI_Win_free', 'MPI_Win_fence', 'MPI_Barrier', \
+      'MPI_Comm_dup', 'MPI_Errhandler_create', 'MPI_Errhandler_set', 'MPI_Attr_get', 'MPI_Get_processor_name']):
         print(lineStr)
 
 def main(args):
