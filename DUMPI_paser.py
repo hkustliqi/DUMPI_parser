@@ -231,8 +231,10 @@ def analyze_DUMPI(fd, matrix):
       matrix[dest][src] += header_size + math.ceil (int(count) * size / flit_size)
       matrix[src][dest] += ack_size
     # print other MPI_functions
-    #elif ('entering') in lineStr:
-     # print(lineStr)
+    elif ('entering') in lineStr:
+      if all (x not in lineStr for x in ['MPI_Init', 'MPI_Comm_size', 'MPI_Waitall', 'MPI_Irecv', \
+      'MPI_Wtime', 'MPI_Finalize', 'MPI_Win_create', 'MPI_Win_free', 'MPI_Win_fence', 'MPI_Barrier']):
+        print(lineStr)
 
 def main(args):
   npes = int(args.npes)
