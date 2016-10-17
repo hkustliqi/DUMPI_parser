@@ -15,7 +15,9 @@ ack_size = 1 #flit
 #TODO: add all MPI data types
 #unit is byte
 def MPI_Data_Type_to_size(datatype):
-  if datatype == 2: # MPI char
+  if datatype == 1: # MPI datatype null
+    return 1
+  elif datatype == 2: # MPI char
     return 1
   elif datatype == 3: # MPI signed char
     return 1
@@ -135,7 +137,7 @@ def analyze_DUMPI(fd, matrix):
       	rootLine = lines[i+8].decode('utf-8')
       	root = re.search('root=(\d+)', rootLine).group(1)
       	for i in range(len(matrix)):
-          matrix[i][int(root)] += header_size + math.ceil (recvcount[i] * size / len(matrix) / flit_size)
+          matrix[i][int(root)] += header_size + math.ceil (recvcount[i] * size / flit_size)
           matrix[int(root)][i] += ack_size
     # MPI_Scatter
     elif any (x in lineStr for x in ['MPI_Scatter entering', 'MPI_Scatterv entering']):
@@ -182,9 +184,8 @@ def analyze_DUMPI(fd, matrix):
       recvcount = [int(s) for s in re.findall(r'\d+', countLine)]
       recvcount.pop(0)
       for i in range(len(matrix)):
-        for j in range(len(matrix[0])):
-          matrix[i][j] += header_size + math.ceil (recvcount[i] * size / len(matrix) / flit_size)
-          matrix[j][i] += ack_size
+        matrix[i][src] += header_size + math.ceil (recvcount[i] * size / flit_size)
+        matrix[src][i] += ack_size
     # MPI_Allreduce
     elif ('MPI_Allreduce entering') in lineStr:
       countLine = lines[i+1].decode('utf-8')
