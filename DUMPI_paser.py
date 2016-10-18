@@ -234,7 +234,7 @@ def analyze_DUMPI(fd, matrix):
     elif ('entering') in lineStr:
       if all (x not in lineStr for x in ['MPI_Init', 'MPI_Comm_size', 'MPI_Waitall', 'MPI_Recv', 'MPI_Irecv', \
       'MPI_Wtime', 'MPI_Wait', 'MPI_Finalize', 'MPI_Win_create', 'MPI_Win_free', 'MPI_Win_fence', 'MPI_Barrier', \
-      'MPI_Comm_dup', 'MPI_Errhandler_create', 'MPI_Errhandler_set', 'MPI_Attr_get', 'MPI_Get_processor_name']):
+      'MPI_Comm_dup', 'MPI_Comm_split', 'MPI_Errhandler_create', 'MPI_Errhandler_set', 'MPI_Attr_get', 'MPI_Get_processor_name']):
         print(lineStr)
 
 def main(args):
@@ -254,6 +254,7 @@ def main(args):
     opener = gzip.open if fileName.endswith('.gz') else open 
     with opener(fileName, 'rb') as fd:
       analyze_DUMPI(fd, matrix)
+    print('Finished processing ' + fileName)
 
   # set diagonal to 0
   for i in range(npes):
@@ -294,7 +295,7 @@ def main(args):
   for element in injection_rate:
     writer.writerow([element])
   outfile.close()
-
+  print('Generated output files in current directory')
 
 if __name__ == '__main__':
   ap = argparse.ArgumentParser()
