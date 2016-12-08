@@ -51,7 +51,7 @@ def MPI_Data_Type_to_size(datatype):
     return 8
   elif datatype == 19: # MPI packed
     return 8
-  elif datatype == 28: # user defined datatype
+  elif datatype == 28 or datatype == 29 or datatype == 30: # user defined datatype
     return 8
   else:
     print('undefined MPI datatype', datatype)
@@ -110,8 +110,10 @@ def analyze_DUMPI(fd, matrix):
       countLine = lines[i+2].decode('utf-8')
       sendcount = [int(s) for s in re.findall(r'\d+', countLine)]
       sendcount.pop(0)
+      numGroup = len(sendcount)
+      groupSize = len(matrix)/numGroup
       for i in range(len(matrix)):
-          matrix[src][i] += header_size + math.ceil (sendcount[i] * size / flit_size)
+          matrix[src][i] += header_size + math.ceil (sendcount[int(i/groupSize)] * size / flit_size)
           matrix[i][src] += ack_size
     # MPI_Gather
     elif any (x in lineStr for x in ['MPI_Gather entering']):
@@ -234,7 +236,8 @@ def analyze_DUMPI(fd, matrix):
     elif ('entering') in lineStr:
       if all (x not in lineStr for x in ['MPI_Init', 'MPI_Comm_size', 'MPI_Waitall', 'MPI_Recv', 'MPI_Irecv', \
       'MPI_Wtime', 'MPI_Wait', 'MPI_Finalize', 'MPI_Win_create', 'MPI_Win_free', 'MPI_Win_fence', 'MPI_Barrier', \
-      'MPI_Comm_dup', 'MPI_Comm_split', 'MPI_Errhandler_create', 'MPI_Errhandler_set', 'MPI_Attr_get', 'MPI_Get_processor_name']):
+      'MPI_Comm_dup', 'MPI_Comm_split', 'MPI_Errhandler_create', 'MPI_Errhandler_set', 'MPI_Attr_get', 'MPI_Get_processor_name', \
+      'MPI_Comm_group', 'MPI_Group_free', 'MPI_Group_incl', 'MPI_Comm_create']):
         print(lineStr)
 
 def main(args):

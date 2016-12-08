@@ -56,6 +56,8 @@ static void do_pingpong (volatile TYPE *x, int64 niters, int64 pair, int64 a, in
     while (i-- > 0)
       {
 	mpp_put (x, &one, 1, peer);
+printf ("mpp_put, dst = %u, src = %u DONE\n", peer, MY_GTHREAD);
+
 	//WAIT (x, 0, me);
         //MPI_Wait(x, 0);
 	*loc = 0;

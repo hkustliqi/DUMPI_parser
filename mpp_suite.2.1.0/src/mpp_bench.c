@@ -251,8 +251,10 @@ void  mpp_put        (uint64 *dst, uint64 *src, int64 nelem, int64 pe)
   MPI_Win win;
   MPI_Win_create(dst, nelem, sizeof(MPI_UINT64_T), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
   MPI_Win_fence(0, win);
+printf ("mpi_win_created\n");
   MPI_Put(src, nelem, MPI_UINT64_T, pe, 0, nelem, MPI_UINT64_T, win);
   MPI_Win_fence(0, win);
+printf ("mpi_put\n");
   MPI_Win_free(&win);
 #endif
 }

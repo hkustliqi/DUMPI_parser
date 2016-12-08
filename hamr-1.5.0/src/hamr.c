@@ -114,7 +114,7 @@ verify_exchange(const uint128 * table, uint64_t fill_count,
 void
 put_buckets(int dest, const uint128 * restrict send_buckets,
             uint64_t *restrict send_counts, uint64_t bucket_len,
-            uint128 * restrict recv_buff, uint64_t *recv_count)
+            uint128 * restrict recv_buff, uint64_t *recv_count, int RANK)
 {
   long dest_index;
 
@@ -142,7 +142,11 @@ put_buckets(int dest, const uint128 * restrict send_buckets,
     //shmem_put128(&recv_buff[dest_index], &send_buckets[dest * bucket_len],
     //             send_counts[dest], dest);
     MPI_Win win;
-    MPI_Win_create(&recv_buff[dest_index], send_counts[dest], sizeof(MPI_LONG_DOUBLE), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    if (RANK==dest) {
+      MPI_Win_create(&recv_buff[dest_index], send_counts[dest], sizeof(MPI_LONG_DOUBLE), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    } else {
+      MPI_Win_create(&recv_buff[dest_index], send_counts[dest], sizeof(MPI_LONG_DOUBLE), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    }
     MPI_Win_fence(0, win);
     MPI_Put(&send_buckets[dest * bucket_len], send_counts[dest], MPI_LONG_DOUBLE, dest, 0, send_counts[dest], MPI_LONG_DOUBLE, win);
     MPI_Win_fence(0, win);
@@ -220,7 +224,7 @@ key_exchange(uint128 * restrict table, uint64_t sort_count,
     send_counts[dest]++;
     if (send_counts[dest] >= bucket_len) {
       put_buckets(dest, send_buckets, send_counts, bucket_len, table,
-                  (uint64_t *) &recv_count);
+                  (uint64_t *) &recv_count, RANK);
     }
 
     if (ii % block_size == 0)
@@ -237,7 +241,7 @@ printf("exchange 1 \n");
     send_counts[dest]++;
     if (send_counts[dest] >= bucket_len) {
       put_buckets(dest, send_buckets, send_counts, bucket_len, table,
-                  (uint64_t *) &recv_count);
+                  (uint64_t *) &recv_count, RANK);
     }
 
     if (ii % block_size == 0)
@@ -249,7 +253,7 @@ printf("exchange 2 \n");
   for (ii = 0; ii < g_npes; ii++) {
     int dest = (ii + RANK) % g_npes;
     put_buckets(dest, send_buckets, send_counts, bucket_len, table,
-                (uint64_t *) &recv_count);
+                (uint64_t *) &recv_count, RANK);
   }
 
   free(send_counts);
