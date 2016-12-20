@@ -51,12 +51,13 @@ def MPI_Data_Type_to_size(datatype):
     return 8
   elif datatype == 19: # MPI packed
     return 8
-  elif datatype == 28 or datatype == 29 or datatype == 30: # user defined datatype
+  elif datatype == 28 or datatype == 29 or datatype == 30 or datatype == 31 or datatype == 32: # user defined datatype
     return 8
   else:
     print('undefined MPI datatype', datatype)
 
-def analyze_DUMPI(fd, matrix):
+def analyze_DUMPI(fd, matrix, fileNum):
+  # src = fileNum
   lines = fd.readlines()
   for i in range(0, len(lines)):
     line = lines[i]
@@ -67,9 +68,11 @@ def analyze_DUMPI(fd, matrix):
       rankLine = lines[i+2].decode('utf-8')
       rank = re.search('rank=(\d+)', rankLine).group(1)
       src = int(rank)
+      # assert srcRank==src
     # map MPI functions to traffic
     # MPI_send and variations
-    elif any (x in lineStr for x in ['MPI_Send entering', 'MPI_Isend entering', 'MPI_Ssend entering', 'MPI_Issend entering', 'MPI_Sendrecv entering']):
+    elif any (x in lineStr for x in ['MPI_Send entering', 'MPI_Isend entering', 'MPI_Ssend entering', \
+                                     'MPI_Issend entering', 'MPI_Sendrecv entering', 'MPI_Rsend entering', 'MPI_Sendrecv_replace entering']):
       countLine = lines[i+1].decode('utf-8')
       count = re.search('count=(\d+)', countLine).group(1)
       datatypeLine = lines[i+2].decode('utf-8')
@@ -185,8 +188,10 @@ def analyze_DUMPI(fd, matrix):
       countLine = lines[i+4].decode('utf-8')
       recvcount = [int(s) for s in re.findall(r'\d+', countLine)]
       recvcount.pop(0)
+      numGroup = len(recvcount)
+      groupSize = len(matrix)/numGroup
       for i in range(len(matrix)):
-        matrix[i][src] += header_size + math.ceil (recvcount[i] * size / flit_size)
+        matrix[i][src] += header_size + math.ceil (recvcount[int(i/groupSize)] * size / flit_size)
         matrix[src][i] += ack_size
     # MPI_Allreduce
     elif ('MPI_Allreduce entering') in lineStr:
@@ -237,7 +242,9 @@ def analyze_DUMPI(fd, matrix):
       if all (x not in lineStr for x in ['MPI_Init', 'MPI_Comm_size', 'MPI_Waitall', 'MPI_Recv', 'MPI_Irecv', \
       'MPI_Wtime', 'MPI_Wait', 'MPI_Finalize', 'MPI_Win_create', 'MPI_Win_free', 'MPI_Win_fence', 'MPI_Barrier', \
       'MPI_Comm_dup', 'MPI_Comm_split', 'MPI_Errhandler_create', 'MPI_Errhandler_set', 'MPI_Attr_get', 'MPI_Get_processor_name', \
-      'MPI_Comm_group', 'MPI_Group_free', 'MPI_Group_incl', 'MPI_Comm_create']):
+      'MPI_Comm_group', 'MPI_Group_free', 'MPI_Group_incl', 'MPI_Comm_create', 'MPI_Get_count', 'MPI_Comm_free', \
+      'MPI_Type_vector', 'MPI_Type_commit', 'MPI_Type_free', 'MPI_Op_free', 'MPI_Op_create', 'MPI_Pack', 'MPI_Pack_size', \
+      'MPI_Testall', 'MPI_Type_indexed']):
         print(lineStr)
 
 def main(args):
@@ -256,7 +263,7 @@ def main(args):
     fileName = ''.join(s)
     opener = gzip.open if fileName.endswith('.gz') else open 
     with opener(fileName, 'rb') as fd:
-      analyze_DUMPI(fd, matrix)
+      analyze_DUMPI(fd, matrix, i)
     print('Finished processing ' + fileName)
 
   # set diagonal to 0
